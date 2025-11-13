@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task 1.1</title>
+</head>
+<body>
+    <my-select></my-select>
+
+    <script>
+        const onLoad = (evt) => {
+            const script = evt.target;
+            const componentName = script.dataset.name;
+
+            if (componentName && customElements.get(componentName)) {
+                console.log(`Веб-компонент ${componentName} успешно зарегистрирован`);
+            }
+        }
+
+        const onError = (err) => {
+            console.error('Ошибка загрузки скрипта:', err);
+        }
+
+        const components = ['my-select'];
+
+        components.forEach(component => {
+            const script = document.createElement('script');
+            script.src = `./${component}.js`;
+            script.dataset.name = component;
+            script.addEventListener('load', onLoad);
+            document.body.append(script);
+        });
+    </script>
+</body>
+</html>
