@@ -1,0 +1,28 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy tasks
+        run: |
+          mkdir -p _site
+          echo "<h1>Задания</h1>" > _site/index.html
+          
+          for branch in task1.1 task1.2 task1.3; do
+            git clone --branch $branch --depth 1 https://github.com/${{ github.repository }}.git _site/$branch || continue
+            echo "<a href='$branch/'>$branch</a><br>" >> _site/index.html
+          done
+
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - uses: actions/deploy-pages@v4
