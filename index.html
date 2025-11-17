@@ -2,14 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Task 1.1</title>
+    <title>Task</title>
 </head>
 <body>
-    <my-select>
-        <option value="opt1">Option 1</option>
-        <option value="opt2">Option 2</option>
-        <option value="opt3">Option 3</option>
-    </my-select>
+    <my-panel>
+        <div slot="header">Custom Panel Header</div>
+
+        <my-select>
+            <option value="opt1">Option 1</option>
+            <option value="opt2">Option 2</option>
+            <option value="opt3">Option 3</option>
+        </my-select>
+    </my-panel>
+
 
     <script>
         const onLoad = (evt) => {
@@ -25,7 +30,7 @@
             console.error('Ошибка загрузки скрипта:', err);
         }
 
-        const components = ['my-select'];
+        const components = ['my-select', 'my-panel'];
 
         components.forEach(component => {
             const script = document.createElement('script');

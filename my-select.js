@@ -1,5 +1,5 @@
-const currentScript = document.currentScript;
-const componentName = currentScript?.dataset?.name || 'my-select';
+const selectCurrentScript = document.currentScript;
+const selectComponentName = selectCurrentScript?.dataset?.name || 'my-select';
 
 class MySelect extends HTMLElement {
     #shadow;
@@ -8,19 +8,40 @@ class MySelect extends HTMLElement {
     #selectPopupSearch;
     #optionsBox;
     #options = [];
+    #allCheckbox;
+    #isOpen = false;
 
     constructor() {
         super();
     }
 
     connectedCallback() {
+        if (this.shadowRoot) return;
+
         this.#shadow = this.attachShadow({mode: "open"});
         this.#createTemplate();
         this.#collectOptions();
         this.#renderOptions();
 
-        this.#selectButton.addEventListener('click', () => {
-            this.#openPopup();
+        this.#selectButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.#togglePopup();
+        });
+
+        this.#selectPopupSearch.addEventListener('input', () => {
+            this.#filterOptions();
+        });
+
+        this.#allCheckbox.addEventListener('change', () => {
+            this.#toggleAllOptions();
+        });
+
+        document.addEventListener('click', () => {
+            this.#closePopup();
+        });
+
+        this.#selectPopup.addEventListener('click', (e) => {
+            e.stopPropagation();
         });
     }
 
@@ -45,10 +66,13 @@ class MySelect extends HTMLElement {
                     border: var(--select-border, 1px solid #ccc);
                     border-radius: 4px;
                     background: white;
-                    color: var(--select-grey-200, #ccc);
                     cursor: pointer;
                     text-align: left;
                     position: relative;
+                }
+                
+                .select-button.placeholder {
+                    color: var(--select-grey-200, #ccc);
                 }
 
                 .select-button::after {
@@ -119,7 +143,7 @@ class MySelect extends HTMLElement {
                 }
             </style>
 
-            <button class="select-button">Select options...</button>
+            <button class="select-button placeholder">Select options...</button>
             <div class="select-popup">
                 <div class="option">
                     <input type="checkbox" value="all"/>
@@ -136,6 +160,7 @@ class MySelect extends HTMLElement {
         this.#selectPopup = this.#shadow.querySelector(".select-popup");
         this.#selectPopupSearch = this.#shadow.querySelector(".select-popup-search");
         this.#optionsBox = this.#shadow.querySelector(".select-popup-options");
+        this.#allCheckbox = this.#shadow.querySelector('input[value="all"]');
     }
 
     #collectOptions() {
@@ -163,13 +188,96 @@ class MySelect extends HTMLElement {
 
         optionsTemplate.innerHTML = optionsHTML;
         this.#optionsBox.append(optionsTemplate.content.cloneNode(true));
+
+        const optionCheckboxes = this.#optionsBox.querySelectorAll('.option input[type="checkbox"]:not([value="all"])');
+        optionCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                this.#updateValue();
+                this.#updateAllCheckboxState();
+            });
+        });
     }
 
-    #openPopup() {
-        this.#selectPopup.classList.toggle("open");
+    #togglePopup() {
+        this.#isOpen = !this.#isOpen;
+        this.#selectPopup.classList.toggle("open", this.#isOpen);
+
+        if (this.#isOpen) {
+            this.#selectPopupSearch.focus();
+        }
+    }
+
+    #closePopup() {
+        this.#isOpen = false;
+        this.#selectPopup.classList.remove("open");
+    }
+
+    #filterOptions() {
+        const searchText = this.#selectPopupSearch.value.toLowerCase();
+        const options = this.#optionsBox.querySelectorAll('.option');
+
+        options.forEach(option => {
+            const text = option.textContent.toLowerCase();
+            const isVisible = text.includes(searchText);
+            option.style.display = isVisible ? 'flex' : 'none';
+        });
+
+        this.#updateAllCheckboxState();
+    }
+
+    #toggleAllOptions() {
+        const options = this.#optionsBox.querySelectorAll('.option input[type="checkbox"]:not([value="all"])');
+        const isChecked = this.#allCheckbox.checked;
+
+        options.forEach(option => {
+            if (option.closest('.option').style.display !== 'none') {
+                option.checked = isChecked;
+            }
+        });
+
+        this.#updateValue();
+    }
+
+    #updateValue() {
+        const selectedOptions = Array.from(this.#optionsBox.querySelectorAll('.option input[type="checkbox"]:checked:not([value="all"])')).map(checkbox => checkbox.value);
+
+        this.value = selectedOptions.join(',');
+
+        if (selectedOptions.length === 0) {
+            this.#selectButton.textContent = 'Select options...';
+            this.#selectButton.classList.add('placeholder');
+        } else {
+            this.#selectButton.textContent = selectedOptions.join(", ");
+            this.#selectButton.classList.remove('placeholder');
+        }
+    }
+
+    #updateAllCheckboxState() {
+        const visibleOptions = Array.from(this.#optionsBox.querySelectorAll('.option input[type="checkbox"]:not([value="all"])'))
+            .filter(checkbox => checkbox.closest('.option').style.display !== 'none');
+
+        if (visibleOptions.length === 0) {
+            this.#allCheckbox.checked = false;
+            this.#allCheckbox.indeterminate = false;
+            return;
+        }
+
+        const checkedCount = visibleOptions.filter(checkbox => checkbox.checked).length;
+
+        if (checkedCount === 0) {
+            this.#allCheckbox.checked = false;
+            this.#allCheckbox.indeterminate = false;
+        } else if (checkedCount === visibleOptions.length) {
+            this.#allCheckbox.checked = true;
+            this.#allCheckbox.indeterminate = false;
+        } else {
+            this.#allCheckbox.checked = false;
+            this.#allCheckbox.indeterminate = true;
+        }
     }
 
     disconnectedCallback() {
+        document.removeEventListener('click', this.#closePopup);
     }
 
     adoptedCallback() {
@@ -179,4 +287,13 @@ class MySelect extends HTMLElement {
     }
 }
 
-customElements.define(componentName, MySelect);
+customElements.define(selectComponentName, MySelect);
+
+document.addEventListener('DOMContentLoaded', () => {
+    const existingElements = document.querySelectorAll(selectComponentName);
+    existingElements.forEach(element => {
+        if (!element.shadowRoot) {
+            element.connectedCallback();
+        }
+    });
+});
