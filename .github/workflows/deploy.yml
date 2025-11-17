@@ -18,7 +18,7 @@ jobs:
           mkdir -p _site
           echo "<h1>Задания</h1>" > _site/index.html
           
-          for branch in task1.1 task1.2 task1.3; do
+          for branch in task1.1 task1.2 task1.3 task1.4 task1.5 task2.1 task2.2 task2.3; do
             git clone --branch $branch --depth 1 https://github.com/${{ github.repository }}.git _site/$branch || continue
             echo "<a href='$branch/'>$branch</a><br>" >> _site/index.html
           done
