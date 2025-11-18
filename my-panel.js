@@ -8,6 +8,8 @@ class MyPanel extends HTMLElement {
     #content;
     #isExpanded = true;
 
+    static observedAttributes = ["header", "sub-header"];
+
     constructor() {
         super();
     }
@@ -16,6 +18,13 @@ class MyPanel extends HTMLElement {
         this.#shadow = this.attachShadow({mode: "open"});
         this.#createTemplate();
         this.#setupEventListeners();
+        this.#updateHeader();
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (oldValue !== newValue) {
+            this.#updateHeader();
+        }
     }
 
     #createTemplate() {
@@ -53,6 +62,13 @@ class MyPanel extends HTMLElement {
                     font-weight: 600;
                 }
 
+                .panel-sub-header {
+                    font-size: 12px;
+                    font-weight: normal;
+                    color: #64748b;
+                    margin-top: 2px;
+                }
+
                 .panel-toggle {
                     background: none;
                     border: none;
@@ -74,7 +90,8 @@ class MyPanel extends HTMLElement {
             <div class="panel">
                 <div class="panel-header">
                     <div class="panel-header-content">
-                        <slot name="header">Panel Header</slot>
+                        <div class="panel-main-header">Default header</div>
+                        <div class="panel-sub-header"></div>
                     </div>
                     <button class="panel-toggle">-</button>
                 </div>
@@ -100,6 +117,27 @@ class MyPanel extends HTMLElement {
             e.stopPropagation();
             this.#toggle();
         });
+    }
+
+    #updateHeader() {
+        const mainHeader = this.#shadow.querySelector('.panel-main-header');
+        const subHeader = this.#shadow.querySelector('.panel-sub-header');
+
+        const headerAttr = this.getAttribute('header');
+        const subHeaderAttr = this.getAttribute('sub-header');
+
+        if (mainHeader && headerAttr) {
+            mainHeader.textContent = headerAttr;
+        }
+
+        if (subHeader && subHeaderAttr) {
+            subHeader.textContent = subHeaderAttr;
+            subHeader.style.display = 'block';
+        } else {
+            subHeader.textContent = '';
+            subHeader.style.display = 'none';
+
+        }
     }
 
     #toggle() {
