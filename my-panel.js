@@ -120,6 +120,8 @@ class MyPanel extends HTMLElement {
     }
 
     #updateHeader() {
+        if (!this.#shadow) return;
+
         const mainHeader = this.#shadow.querySelector('.panel-main-header');
         const subHeader = this.#shadow.querySelector('.panel-sub-header');
 
