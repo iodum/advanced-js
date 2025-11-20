@@ -32,35 +32,38 @@
     </style>
 </head>
 <body>
-    <button id="start">Start!</button>
-    <div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="56" fill="none" class="spinner">
-            <path stroke="currentColor" stroke-width="4"
-                  d="M3.464 30a4 4 0 0 1 0-4L16 4.287a4 4 0 0 1 3.464-2h25.072a4 4 0 0 1 3.464 2L60.536 26a4 4 0 0 1 0 4L48 51.713a4 4 0 0 1-3.464 2H19.464a4 4 0 0 1-3.464-2L3.464 30Z"/>
-        </svg>
-    </div>
-    <div id="result"></div>
+<button id="start">Start!</button>
+<div>
+    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="56" fill="none" class="spinner">
+        <path stroke="currentColor" stroke-width="4"
+              d="M3.464 30a4 4 0 0 1 0-4L16 4.287a4 4 0 0 1 3.464-2h25.072a4 4 0 0 1 3.464 2L60.536 26a4 4 0 0 1 0 4L48 51.713a4 4 0 0 1-3.464 2H19.464a4 4 0 0 1-3.464-2L3.464 30Z"/>
+    </svg>
+</div>
+<div id="result"></div>
 
-    <script>
-        const start = document.getElementById('start');
-        let thread = null;
+<script>
+    const start = document.getElementById('start');
+    let thread = null;
 
-        start.addEventListener('click', () => {
-            if (window.Worker && !thread) {
-                start.disabled = true;
+    start.addEventListener('click', () => {
+        if (window.Worker) {
+            start.disabled = true;
+
+            if (!thread) {
                 thread = new Worker("./thread.js");
-
-                thread.postMessage(3000);
-
-                thread.onmessage = (evt) => {
-                    document.getElementById('result').innerHTML = evt.data;
-
-                    thread.terminate();
-                    thread = null;
-                    start.disabled = false;
-                };
             }
-        });
-    </script>
+
+            thread.postMessage(3000);
+
+            thread.onmessage = (evt) => {
+                document.getElementById('result').innerHTML = evt.data;
+
+                // thread.terminate(); // subtask1
+                // thread = null;
+                start.disabled = false;
+            };
+        }
+    });
+</script>
 </body>
 </html>
