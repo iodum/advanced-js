@@ -1,17 +1,12 @@
-const slowFunction = (timeout = 3000) => {
-    console.log('start');
-    let start = performance.now();
-    let x = 0;
-    let i = 0;
-    do {
-        i += 1;
-        x += (Math.random() - 0.5) * i;
-    } while (performance.now() - start < timeout);
-    console.log('end', x);
-    return x;
-}
-
 self.onmessage = function (evt) {
-    const result = slowFunction(evt.data);
-    self.postMessage(result);
+    console.log('start thread');
+    const thread2 = new Worker("./thread2.js");
+    thread2.postMessage(evt.data);
+
+    thread2.onmessage = function (evt2) {
+        const result = evt2.data;
+        thread2.terminate();
+        self.postMessage(result);
+        console.log('end thread');
+    };
 }

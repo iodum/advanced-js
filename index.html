@@ -46,20 +46,17 @@
     let thread = null;
 
     start.addEventListener('click', () => {
-        if (window.Worker) {
+        if (window.Worker && !thread) {
             start.disabled = true;
 
-            if (!thread) {
-                thread = new Worker("./thread.js");
-            }
-
+            thread = new Worker("./thread.js");
             thread.postMessage(3000);
 
             thread.onmessage = (evt) => {
                 document.getElementById('result').innerHTML = evt.data;
 
-                // thread.terminate(); // subtask1
-                // thread = null;
+                thread.terminate();
+                thread = null;
                 start.disabled = false;
             };
         }
