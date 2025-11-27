@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Web Worker</title>
+    <title>Service Worker</title>
     <style>
         @keyframes spinner {
             0% {
@@ -33,6 +33,7 @@
 </head>
 <body>
 <button id="start">Start!</button>
+<button id="unregister">Unregister Service Worker</button>
 <div>
     <svg xmlns="http://www.w3.org/2000/svg" width="64" height="56" fill="none" class="spinner">
         <path stroke="currentColor" stroke-width="4"
@@ -42,25 +43,80 @@
 <div id="result"></div>
 
 <script>
-    const start = document.getElementById('start');
-    let thread = null;
-
-    start.addEventListener('click', () => {
-        if (window.Worker && !thread) {
-            start.disabled = true;
-
-            thread = new Worker("./thread.js");
-            thread.postMessage(3000);
-
-            thread.onmessage = (evt) => {
-                document.getElementById('result').innerHTML = evt.data;
-
-                thread.terminate();
-                thread = null;
-                start.disabled = false;
-            };
+    const getServiceWorker = async (scriptURL, options) => {
+        if ("serviceWorker" in navigator) {
+            try {
+                let registration = await navigator.serviceWorker.getRegistration();
+                if (!registration) {
+                    registration = await navigator.serviceWorker.register(scriptURL, options);
+                    await navigator.serviceWorker.ready;
+                }
+                return {
+                    registration: registration,
+                    container: navigator.serviceWorker,
+                    controller: registration.active,
+                    addEventListener: navigator.serviceWorker.addEventListener.bind(navigator.serviceWorker),
+                    postMessage: (message) => {
+                        if (registration.active) {
+                            registration.active.postMessage(message);
+                        }
+                    }
+                };
+            } catch (error) {
+                console.error(`Registration failed with ${error}`);
+            }
         }
-    });
+    };
+
+    (async () => {
+        const start = document.getElementById('start');
+        const unregister = document.getElementById('unregister');
+        const spinner = document.querySelector('.spinner');
+        let serviceWorker = null;
+
+
+        serviceWorker = await getServiceWorker("./service-worker.js", { scope: "./" });
+
+        if (!serviceWorker) {
+            document.getElementById('result').innerHTML = 'Service Worker not supported';
+            return;
+        }
+
+        spinner.style.display = 'none';
+
+        serviceWorker.addEventListener('message', (evt) => {
+            if (evt.data.type === 'RESULT') {
+                document.getElementById('result').innerHTML = evt.data.result;
+                spinner.style.display = 'none';
+                start.disabled = false;
+            }
+
+            else if (evt.data.type === 'CACHED_RESULT') {
+                document.getElementById('result').innerHTML = 'Cached: ' + evt.data.result;
+            }
+        });
+
+        serviceWorker.postMessage({ type: 'GET_CACHED' });
+
+        start.addEventListener('click', () => {
+            if (serviceWorker) {
+                start.disabled = true;
+                spinner.style.display = 'block';
+                serviceWorker.postMessage({ type: 'RECALCULATE', timeout: 3000 });
+            }
+        });
+
+        unregister.addEventListener('click', async () => {
+            if (serviceWorker) {
+                await serviceWorker.registration.unregister();
+                serviceWorker = null;
+                start.disabled = false;
+                spinner.style.display = 'none';
+                document.getElementById('result').innerHTML = 'Service Worker unregistered';
+            }
+        });
+
+    })();
 </script>
 </body>
 </html>
