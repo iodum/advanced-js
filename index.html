@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Service Worker</title>
+    <style>
+        @keyframes spinner {
+            0% {
+                transform: scale(.1) rotate(0deg);
+                fill: currentColor;
+            }
+
+            33% {
+                transform: scale(1) rotate(150deg);
+                fill: transparent;
+            }
+
+            66% {
+                transform: scale(1) rotate(210deg);
+                fill: transparent;
+            }
+
+            100% {
+                transform: scale(.1) rotate(360deg);
+                fill: currentColor;
+            }
+        }
+
+        .spinner {
+            animation: spinner 1.5s infinite linear;
+            color: rgb(6, 75, 67);
+        }
+    </style>
+</head>
+<body>
+<button id="start">Start!</button>
+<button id="unregister">Unregister Service Worker</button>
+<div>
+    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="56" fill="none" class="spinner">
+        <path stroke="currentColor" stroke-width="4"
+              d="M3.464 30a4 4 0 0 1 0-4L16 4.287a4 4 0 0 1 3.464-2h25.072a4 4 0 0 1 3.464 2L60.536 26a4 4 0 0 1 0 4L48 51.713a4 4 0 0 1-3.464 2H19.464a4 4 0 0 1-3.464-2L3.464 30Z"/>
+    </svg>
+</div>
+<div id="result"></div>
+
+<script>
+    const getServiceWorker = async (scriptURL, options) => {
+        if ("serviceWorker" in navigator) {
+            try {
+                let registration = await navigator.serviceWorker.getRegistration();
+                if (!registration) {
+                    registration = await navigator.serviceWorker.register(scriptURL, options);
+                    await navigator.serviceWorker.ready;
+                }
+                return {
+                    registration: registration,
+                    container: navigator.serviceWorker,
+                    controller: registration.active,
+                    addEventListener: navigator.serviceWorker.addEventListener.bind(navigator.serviceWorker),
+                    postMessage: (message) => {
+                        if (registration.active) {
+                            registration.active.postMessage(message);
+                        }
+                    }
+                };
+            } catch (error) {
+                console.error(`Registration failed with ${error}`);
+            }
+        }
+    };
+
+    (async () => {
+        const start = document.getElementById('start');
+        const unregister = document.getElementById('unregister');
+        const spinner = document.querySelector('.spinner');
+        let serviceWorker = null;
+
+
+        serviceWorker = await getServiceWorker("./service-worker.js", {scope: "./"});
+
+        if (!serviceWorker) {
+            document.getElementById('result').innerHTML = 'Service Worker not supported';
+            return;
+        }
+
+        spinner.style.display = 'none';
+
+        serviceWorker.addEventListener('message', (evt) => {
+            if (evt.data.type === 'RESULT') {
+                document.getElementById('result').innerHTML = evt.data.result;
+                spinner.style.display = 'none';
+                start.disabled = false;
+            }
+            else if (evt.data.type === 'CACHED_RESULT') {
+                document.getElementById('result').innerHTML = 'Cached: ' + evt.data.result;
+            }
+        });
+
+        serviceWorker.postMessage({type: 'GET_CACHED'});
+
+        start.addEventListener('click', () => {
+            if (serviceWorker) {
+                start.disabled = true;
+                spinner.style.display = 'block';
+                serviceWorker.postMessage({type: 'RECALCULATE', timeout: 3000});
+            }
+        });
+
+        unregister.addEventListener('click', async () => {
+            if (serviceWorker) {
+                await serviceWorker.registration.unregister();
+                serviceWorker = null;
+                start.disabled = false;
+                spinner.style.display = 'none';
+                document.getElementById('result').innerHTML = 'Service Worker unregistered';
+            }
+        });
+
+    })();
+</script>
+</body>
+</html>
