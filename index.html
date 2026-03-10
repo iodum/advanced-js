@@ -51,17 +51,14 @@
 
             if (!thread) {
                 thread = new Worker("./thread.js");
+
+                thread.onmessage = (evt) => {
+                    document.getElementById('result').innerHTML = evt.data;
+                    start.disabled = false;
+                };
             }
 
             thread.postMessage(3000);
-
-            thread.onmessage = (evt) => {
-                document.getElementById('result').innerHTML = evt.data;
-
-                // thread.terminate(); // subtask1
-                // thread = null;
-                start.disabled = false;
-            };
         }
     });
 </script>
