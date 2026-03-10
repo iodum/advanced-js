@@ -5,20 +5,26 @@
     <title>Task 1.1</title>
 </head>
 <body>
-    <my-select></my-select>
-
     <script>
         const onLoad = (evt) => {
             const script = evt.target;
             const componentName = script.dataset.name;
 
-            if (componentName && customElements.get(componentName)) {
+            if (!/^[a-z][a-z0-9]*-[a-z0-9-]*$/.test(componentName)) {
+                console.error(`Невалидное имя компонента: ${componentName}`);
+                return;
+            }
+
+            if (customElements.get(componentName)) {
                 console.log(`Веб-компонент ${componentName} успешно зарегистрирован`);
+
+                const element = document.createElement(componentName);
+                document.body.appendChild(element);
             }
         }
 
         const onError = (err) => {
-            console.error('Ошибка загрузки скрипта:', err);
+            console.error('Ошибка загрузки:', err);
         }
 
         const components = ['my-select'];
@@ -28,6 +34,7 @@
             script.src = `./${component}.js`;
             script.dataset.name = component;
             script.addEventListener('load', onLoad);
+            script.addEventListener('error', onError);
             document.body.append(script);
         });
     </script>
