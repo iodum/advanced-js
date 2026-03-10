@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task</title>
+</head>
+<body>
+    <my-panel header="Custom Panel Header" sub-header="Additional information">
+        <my-select>
+            <option value="opt1">Option 1</option>
+            <option value="opt2">Option 2</option>
+            <option value="opt3">Option 3</option>
+        </my-select>
+    </my-panel>
+
+
+    <script>
+        const onLoad = (evt) => {
+            const script = evt.target;
+            const componentName = script.dataset.name;
+
+            if (componentName && customElements.get(componentName)) {
+                console.log(`Веб-компонент ${componentName} успешно зарегистрирован`);
+            }
+        }
+
+        const onError = (err) => {
+            console.error('Ошибка загрузки скрипта:', err);
+        }
+
+        const components = ['my-select', 'my-panel'];
+
+        components.forEach(component => {
+            const script = document.createElement('script');
+            script.src = `./${component}.js`;
+            script.dataset.name = component;
+            script.addEventListener('load', onLoad);
+            document.body.append(script);
+        });
+    </script>
+</body>
+</html>
