@@ -10,10 +10,10 @@ class MySelect extends HTMLElement {
 
     constructor() {
         super();
-        console.log('Hello World');
     }
 
     connectedCallback() {
+        this.attachShadow({mode: "open"});
         this.#createTemplate();
         this.#collectOptions();
         this.#renderOptions();
@@ -29,12 +29,13 @@ class MySelect extends HTMLElement {
             </div>
         `;
 
-        this.append(template.content.cloneNode(true));
+        // MySelect наследник HTMLElement, значит наследует и его методы, в том числе append().
+        this.shadowRoot.append(template.content.cloneNode(true));
 
-        this.#selectButton = this.querySelector(".select-button");
-        this.#selectPopup = this.querySelector(".select-popup");
-        this.#selectPopupSearch = this.querySelector(".select-popup-search");
-        this.#optionsBox = this.querySelector(".select-popup-options");
+        this.#selectButton = this.shadowRoot.querySelector(".select-button");
+        this.#selectPopup = this.shadowRoot.querySelector(".select-popup");
+        this.#selectPopupSearch = this.shadowRoot.querySelector(".select-popup-search");
+        this.#optionsBox = this.shadowRoot.querySelector(".select-popup-options");
     }
 
     #collectOptions() {
@@ -53,14 +54,13 @@ class MySelect extends HTMLElement {
 
         const optionsTemplate = document.createElement('template');
 
-        const optionsHTML = this.#options.map(option => `
+        optionsTemplate.innerHTML = this.#options.map(option => `
             <label class="option" data-value="${option.value}">
                 <input type="checkbox" value="${option.value}"/>
                 ${option.text}
             </label>
         `).join('');
 
-        optionsTemplate.innerHTML = optionsHTML;
         this.#optionsBox.append(optionsTemplate.content.cloneNode(true));
     }
 
