@@ -75,7 +75,7 @@
         let serviceWorker = null;
 
 
-        serviceWorker = await getServiceWorker("./service-worker.js", { scope: "./" });
+        serviceWorker = await getServiceWorker("./service-worker.js", {scope: "./"});
 
         if (!serviceWorker) {
             document.getElementById('result').innerHTML = 'Service Worker not supported';
@@ -90,19 +90,18 @@
                 spinner.style.display = 'none';
                 start.disabled = false;
             }
-
             else if (evt.data.type === 'CACHED_RESULT') {
                 document.getElementById('result').innerHTML = 'Cached: ' + evt.data.result;
             }
         });
 
-        serviceWorker.postMessage({ type: 'GET_CACHED' });
+        serviceWorker.postMessage({type: 'GET_CACHED'});
 
         start.addEventListener('click', () => {
             if (serviceWorker) {
                 start.disabled = true;
                 spinner.style.display = 'block';
-                serviceWorker.postMessage({ type: 'RECALCULATE', timeout: 3000 });
+                serviceWorker.postMessage({type: 'RECALCULATE', timeout: 3000});
             }
         });
 

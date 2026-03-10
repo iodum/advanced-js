@@ -27,11 +27,14 @@ const broadcast = async (msg) => {
     }
 }
 
+self.addEventListener('install', (evt) => {
+    evt.waitUntil(self.skipWaiting());
+});
+
 self.addEventListener('activate', async (evt) => {
     console.log('activate', evt);
     evt.waitUntil(self.clients.claim());
 });
-
 
 self.addEventListener('message', async (evt) => {
     console.log('message', evt.data);
@@ -43,7 +46,7 @@ self.addEventListener('message', async (evt) => {
         await broadcast({type: 'RESULT', result: result});
     } else if (data.type === 'GET_CACHED') {
         if (cache.result !== null) {
-            evt.ports[0]?.postMessage({
+            await broadcast({
                 type: 'CACHED_RESULT',
                 result: cache.result
             });
