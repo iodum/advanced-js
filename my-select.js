@@ -14,8 +14,7 @@ class MySelect extends HTMLElement {
     }
 
     connectedCallback() {
-        this.attachShadow({mode: "open"});
-        this.#shadow = this.attachShadow({mode: "open"});
+        this.#shadow = this.attachShadow({ mode: "open" });
         this.#createTemplate();
         this.#collectOptions();
         this.#renderOptions();
@@ -50,6 +49,23 @@ class MySelect extends HTMLElement {
                     cursor: pointer;
                     text-align: left;
                     position: relative;
+                    transition: border-color 0.2s ease, background 0.2s ease;
+                }
+
+                .select-button:hover:not(:disabled) {
+                    border-color: var(--select-grey-400, #345);
+                    background: var(--select-grey-100, #f1f5f9);
+                }
+
+                .select-button:focus-visible {
+                    outline: 2px solid var(--select-grey-400, #345);
+                    outline-offset: 2px;
+                }
+
+                .select-button:disabled {
+                    background: var(--select-grey-100, #f1f5f9);
+                    cursor: not-allowed;
+                    opacity: 0.6;
                 }
 
                 .select-button::after {
@@ -60,10 +76,12 @@ class MySelect extends HTMLElement {
                     transform: translateY(-50%);
                     font-size: 12px;
                     color: var(--select-grey-300, #4e4e4e);
+                    transition: transform 0.2s ease;
                 }
+               
 
-                .select-button:hover {
-                    border-color: var(--select-grey-400, #4e4e4e);
+                 .select-button:has( + .select-popup.open)::after {
+                    transform: translateY(-50%) rotate(180deg);
                 }
 
                 .select-popup {
@@ -92,15 +110,40 @@ class MySelect extends HTMLElement {
                     margin: 0;
                     box-sizing: border-box;
                     outline: none;
+                    transition: border-color 0.2s ease;
                 }
                 
                 .select-popup-search:focus {
-                    border-color: var(--select-grey-400, #4e4e4e);
+                    border-color: var(--select-grey-400, #345);
+                }
+
+                .select-popup-search:focus-visible {
+                    outline: 2px solid var(--select-grey-400, #345);
+                    outline-offset: 2px;
                 }
 
                 .select-popup-options {
                     max-height: 200px;
                     overflow-y: auto;
+                }
+
+                .select-popup-options::-webkit-scrollbar {
+                    width: 8px;
+                }
+
+                .select-popup-options::-webkit-scrollbar-track {
+                    background: var(--select-grey-100, #f1f5f9);
+                    border-radius: 4px;
+                }
+
+                .select-popup-options::-webkit-scrollbar-thumb {
+                    background: var(--select-grey-300, #94A3B8);
+                    border-radius: 4px;
+                    transition: background 0.2s ease;
+                }
+
+                .select-popup-options::-webkit-scrollbar-thumb:hover {
+                    background: var(--select-grey-400, #345);
                 }
 
                 .option {
@@ -109,14 +152,25 @@ class MySelect extends HTMLElement {
                     padding: 7px 10px;
                     color: var(--select-grey-400, #4e4e4e);
                     cursor: pointer;
+                    transition: background 0.15s ease;
                 }
 
                 label.option:hover {
                     background: var(--select-grey-100, #fff);
                 }
+                
+                .option:focus-visible {
+                    outline: 2px solid var(--select-grey-400, #345);
+                    outline-offset: -2px;
+                }
 
                 .option input[type="checkbox"] {
                     margin-right: 7px;
+                }
+
+                .option input[type="checkbox"]:focus-visible {
+                    outline: 2px solid var(--select-grey-400, #345);
+                    outline-offset: 2px;
                 }
             </style>
 
@@ -131,7 +185,6 @@ class MySelect extends HTMLElement {
             </div>
         `;
 
-        // MySelect наследник HTMLElement, значит наследует и его методы, в том числе append().
         this.shadowRoot.append(template.content.cloneNode(true));
 
         this.#selectButton = this.shadowRoot.querySelector(".select-button");
