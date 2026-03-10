@@ -10,6 +10,8 @@ class MySelect extends HTMLElement {
     #options = [];
     #allCheckbox;
     #isOpen = false;
+    #searchTimeout;
+    #debounceDelay = 300;
 
     constructor() {
         super();
@@ -29,7 +31,10 @@ class MySelect extends HTMLElement {
         });
 
         this.#selectPopupSearch.addEventListener('input', () => {
-            this.#filterOptions();
+            clearTimeout(this.#searchTimeout);
+            this.#searchTimeout = setTimeout(() => {
+                this.#filterOptions();
+            }, this.#debounceDelay);
         });
 
         this.#allCheckbox.addEventListener('change', () => {
@@ -331,6 +336,7 @@ class MySelect extends HTMLElement {
 
     disconnectedCallback() {
         document.removeEventListener('click', this.#closePopup);
+        clearTimeout(this.#searchTimeout);
     }
 
     adoptedCallback() {
