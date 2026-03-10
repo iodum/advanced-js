@@ -58,8 +58,8 @@
             thread.onmessage = (evt) => {
                 document.getElementById('result').innerHTML = evt.data;
 
-                // thread.terminate(); // subtask1
-                // thread = null;
+                thread.terminate();
+                thread = null;
                 start.disabled = false;
             };
         }
